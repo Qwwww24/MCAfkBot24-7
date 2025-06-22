@@ -1,26 +1,63 @@
 const mineflayer = require('mineflayer');
+const express = require('express');
 
-function createBot() {
-  const bot = mineflayer.createBot({
-    host: 'your-server-ip-here', // e.g., play.myserver.net
-    port: 25565, // Minecraft default port
-    username: 'AFK_Bot123', // Change this to your desired bot name
-    // password: 'yourpassword' // Uncomment if using a premium account
+// === WEB SERVER FOR UPTIMEROBOT ===
+const app = express();
+app.get('/', (req, res) => res.send('AFK Bot is alive!'));
+app.listen(3000, () => console.log('Web server running on port 3000'));
+
+// === CONFIG ===
+const bot = mineflayer.createBot({
+  host: 'qw-balls.mcsh.io', // Your cracked server IP
+  port: 25565,              // Default Minecraft port
+  username: 'qwww-AFKBOT',  // Any name, since it's a cracked server
+  auth: 'offline'           // Offline = cracked
+});
+
+// === EVENT: When the bot spawns ===
+bot.on('spawn', () => {
+  console.log('Bot has joined the server!');
+
+  // Anti-kick movement
+  setInterval(() => {
+    bot.setControlState('jump', true);
+    setTimeout(() => bot.setControlState('jump', false), 500);
+  }, 10000); // Jump every 10 seconds
+});
+
+// === Auto-reconnect if kicked or disconnected ===
+bot.on('end', () => {
+  console.log('Bot was disconnected. Reconnecting in 5s...');
+  setTimeout(() => reconnectBot(), 5000);
+});
+
+bot.on('error', err => {
+  console.log('Bot error:', err);
+});
+
+// === Reconnect Function ===
+function reconnectBot() {
+  const newBot = mineflayer.createBot({
+    host: 'qw-balls.mcsh.io',
+    port: 25565,
+    username: 'qwww-AFKBOT',
+    auth: 'offline'
   });
 
-  bot.on('spawn', () => {
-    console.log('✅ Bot spawned and AFK!');
-    bot.setControlState('jump', true); // Keeps jumping to prevent AFK kicks
+  newBot.on('spawn', () => {
+    console.log('Bot reconnected!');
+    setInterval(() => {
+      newBot.setControlState('jump', true);
+      setTimeout(() => newBot.setControlState('jump', false), 500);
+    }, 10000);
   });
 
-  bot.on('end', () => {
-    console.log('❌ Bot disconnected. Reconnecting...');
-    setTimeout(createBot, 5000); // Reconnect after 5 seconds
+  newBot.on('end', () => {
+    console.log('Re-disconnected. Trying again...');
+    setTimeout(reconnectBot, 5000);
   });
 
-  bot.on('error', err => {
-    console.log('⚠️ Error:', err.message);
+  newBot.on('error', err => {
+    console.log('Reconnection error:', err);
   });
 }
-
-createBot();
